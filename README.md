@@ -17,3 +17,5 @@ some commit
 other commit
 
 final commit
+
+updated sonarcode
