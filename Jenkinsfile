@@ -12,8 +12,11 @@ environment {
 stages {
     stage('************build-stage************************') {
         steps {
-           
-            sh "mvn clean package -Dmaven.test.skip=true"
+
+            echo "*****Building-${env.APPLICATION_NAME}******************"           
+           sh "mvn clean package -DskipTests=true"
+           // sh "mvn clean package -Dmaven.test.skip=true"
+            archive 'target/*.jar'
         }
 
     }
