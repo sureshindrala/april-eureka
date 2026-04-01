@@ -20,6 +20,16 @@ stages {
         }
 
     }
+    stage('***********************sonar-stage*******************'){
+        echo "*******${env.APPLICATION_NAME}-sonar scaning*************"
+        sh """
+            mvn clean verify sonar:sonar \
+            -Dsonar.projectKey=chathura-eureka \
+            -Dsonar.host.url=http://34.57.207.225:9000 \
+            -Dsonar.login=sqa_7b7618e38bb127784fc9b708e8890b0e551fafa5        
+
+        """
+    }
  }
 
 }
