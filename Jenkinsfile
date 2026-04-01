@@ -10,7 +10,7 @@ environment {
     APPLICATION_NAME = "eureka"
 }
 stages {
-    stage(************build-stage************************) {
+    stage('************build-stage************************') {
         steps {
            
             sh "mvn clean package -Dmaven.test.skip=true"
