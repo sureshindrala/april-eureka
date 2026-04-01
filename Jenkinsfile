@@ -12,10 +12,11 @@ environment {
 stages {
     stage(************build-stage************************) {
         steps {
-            echo "Building${env.APPLICATION_NAME} application"
+           
             sh "mvn clean package -Dmaven.test.skip=true"
         }
 
     }
-}
+ }
+
 }
