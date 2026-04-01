@@ -21,6 +21,7 @@ stages {
 
     }
     stage('***********************sonar-stage*******************'){
+        steps {
         echo "*******${env.APPLICATION_NAME}-sonar scaning*************"
         sh """
             mvn clean verify sonar:sonar \
@@ -29,6 +30,8 @@ stages {
             -Dsonar.login=sqa_7b7618e38bb127784fc9b708e8890b0e551fafa5        
 
         """
+        }
+
     }
  }
 
