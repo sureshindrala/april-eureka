@@ -26,32 +26,30 @@ stages {
     stage('***********************sonar-stage*******************'){
         steps {
         echo "*******${env.APPLICATION_NAME}-sonar scaning*************"
-        withCredentials([string(credentialsId: 'sonar_creds', variable: 'sonar_creds')])
-        sh """
-            mvn clean verify sonar:sonar \
-            -Dsonar.projectKey=chathura-eureka \
-            -Dsonar.host.url=$SONAR_HOST \
-            -Dsonar.login=$sonar_creds        
+         withCredentials([string(credentialsId: 'sonar_creds', variable: 'sonar_creds')])
+            sh """
+                mvn clean verify sonar:sonar \
+                -Dsonar.projectKey=chathura-eureka \
+                -Dsonar.host.url=$SONAR_HOST \
+                -Dsonar.login=$sonar_creds        
 
-        """
+            """
         }
 
     }
-    stage ('Build Format') {
-            steps {
-                    echo "***************************Printing Build Format*****************************"
-                    script {
-                        sh """
-                        echo "Testing JAR SOURCE: chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
-                    
-                    
-
-                        """
-                        // sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
-                        // sh "ls -la ./.cicd"
-                        // sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
-                    }
+    stage('Build Format') {
+        steps {
+                echo "***************************Printing Build Format*****************************"
+                script {
+                    sh """
+                    echo "Testing JAR SOURCE: chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
+                
+                    """
+                    // sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
+                    // sh "ls -la ./.cicd"
+                    // sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
                 }
+            }
     }    
     
  }
