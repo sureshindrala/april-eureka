@@ -1,5 +1,5 @@
 # This is offical image
-FROM openjdk:18
+FROM eclipse-temurin:17-jre-jammy
 # Creat a folder for jar file
 RUN mkdir -p /opt/chathura/
 # Make work dir 
