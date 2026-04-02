@@ -36,7 +36,7 @@ pipeline {
         POM_PACKAGING = readMavenPom().getPackaging()
         DOCKER_HUB = "docker.io/sureshindrala"
         DOCKER_CREDS = credentials('docker_creds')
-         DOCKER_SERVER= "35.224.229.170"   
+        DOCKER_SERVER= "35.224.229.170"   
     }
     stages {
         stage('************build-stage************************') {
@@ -65,36 +65,42 @@ pipeline {
             }
 
         }
-        stage('Build Format') {
-            steps {
-                    echo "***************************Printing Build Format*****************************"
-                    script {
-                        sh """
-                        echo "Testing JAR SOURCE: chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
-                        echo "Testing JAR Destination Format: chathura-${env.APPLICATION_NAME}-${currentBuild.number}-${BRANCH_NAME}.${env.POM_PACKAGING}"
+        // stage('Build Format') {
+        //     steps {
+        //             echo "***************************Printing Build Format*****************************"
+        //             script {
+        //                 sh """
+        //                 echo "Testing JAR SOURCE: chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
+        //                 echo "Testing JAR Destination Format: chathura-${env.APPLICATION_NAME}-${currentBuild.number}-${BRANCH_NAME}.${env.POM_PACKAGING}"
                     
-                        """
-                        sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
-                        sh "ls -la ./.cicd"
-                        sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
+        //                 """
+        //                 sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
+        //                 sh "ls -la ./.cicd"
+        //                 sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
                         
-                        echo "****************** Login to Docker Registry ******************"
+        //                 echo "****************** Login to Docker Registry ******************"
 
-                        sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
-                        echo "****************** Push Image to Docker Registry ******************"
-                        sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"                
+        //                 sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
+        //                 echo "****************** Push Image to Docker Registry ******************"
+        //                 sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"                
                     
+        //             }
+        //         }
+        //     }
+            stage ('************docker-build and push************************') {
+                steps{
+                    script{
+                        dockerBuildandPush().call()
                     }
                 }
             }
-            stage ('docker-dev-deploy') {
+            stage ('************deploy to Dev************************') {
                 steps{
                     script{
-                    imageValidation().call()
-                    dockerdeploy('dev','5761').call()   
+                        dockerdeploy('dev' ,'5761', '8761').call ()
                     }
                 }
-            }            
+            }                        
         
     }
 }
