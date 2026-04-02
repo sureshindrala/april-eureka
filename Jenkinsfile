@@ -91,7 +91,7 @@ pipeline {
                 steps{
                     script{
                     imageValidation().call()
-                    dockerdeploy('dev','5761').call   
+                    dockerdeploy('dev','5761').call()   
                     }
                 }
             }            
