@@ -5,7 +5,7 @@ pipeline {
     tools {
         maven 'Maven-3.9.14'
         jdk 'JDK-17'
-}
+   }
     parameters {
         choice (name: 'scanOnly',
                 choices: 'no\nyes',
@@ -37,67 +37,66 @@ pipeline {
         DOCKER_HUB = "docker.io/sureshindrala"
         DOCKER_CREDS = credentials('docker_creds')
          DOCKER_SERVER= "35.224.229.170"   
-}
-stages {
-    stage('************build-stage************************') {
-        steps {
-
-            echo "*****Building-${env.APPLICATION_NAME}******************"           
-           sh "mvn clean package -DskipTests=true"
-           // sh "mvn clean package -Dmaven.test.skip=true"
-            archive 'target/*.jar'
-        }
-
     }
-    stage('***********************sonar-stage*******************'){
-        steps {
-        echo "*******${env.APPLICATION_NAME}-sonar scaning*************"
-         withCredentials([string(credentialsId: 'sonar_creds', variable: 'sonar_creds')]){
-            sh """
-                mvn clean verify sonar:sonar \
-                -Dsonar.projectKey=chathura-eureka \
-                -Dsonar.host.url=$SONAR_HOST \
-                -Dsonar.login=$sonar_creds        
+    stages {
+        stage('************build-stage************************') {
+            steps {
 
-            """
-         }
+                echo "*****Building-${env.APPLICATION_NAME}******************"           
+            sh "mvn clean package -DskipTests=true"
+            // sh "mvn clean package -Dmaven.test.skip=true"
+                archive 'target/*.jar'
+            }
+
+            }
+        stage('***********************sonar-stage*******************'){
+            steps {
+            echo "*******${env.APPLICATION_NAME}-sonar scaning*************"
+            withCredentials([string(credentialsId: 'sonar_creds', variable: 'sonar_creds')]){
+                sh """
+                    mvn clean verify sonar:sonar \
+                    -Dsonar.projectKey=chathura-eureka \
+                    -Dsonar.host.url=$SONAR_HOST \
+                    -Dsonar.login=$sonar_creds        
+
+                """
+            }
+
+            }
 
         }
-
-    }
-    stage('Build Format') {
-        steps {
-                echo "***************************Printing Build Format*****************************"
-                script {
-                    sh """
-                    echo "Testing JAR SOURCE: chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
-                    echo "Testing JAR Destination Format: chathura-${env.APPLICATION_NAME}-${currentBuild.number}-${BRANCH_NAME}.${env.POM_PACKAGING}"
-                
-                    """
-                     sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
-                     sh "ls -la ./.cicd"
-                     sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
+        stage('Build Format') {
+            steps {
+                    echo "***************************Printing Build Format*****************************"
+                    script {
+                        sh """
+                        echo "Testing JAR SOURCE: chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
+                        echo "Testing JAR Destination Format: chathura-${env.APPLICATION_NAME}-${currentBuild.number}-${BRANCH_NAME}.${env.POM_PACKAGING}"
                     
-                    echo "****************** Login to Docker Registry ******************"
+                        """
+                        sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
+                        sh "ls -la ./.cicd"
+                        sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
+                        
+                        echo "****************** Login to Docker Registry ******************"
 
-                    sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
-                    echo "****************** Push Image to Docker Registry ******************"
-                    sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"                
-                
+                        sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
+                        echo "****************** Push Image to Docker Registry ******************"
+                        sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"                
+                    
+                    }
                 }
             }
-        }
-    
+            stage ('docker-dev-deploy') {
+                steps{
+                    script{
+                    imageValidation().call()
+                    dockerdeploy('dev','5761').call   
+                    }
+                }
+            }            
+        
     }
-    stage ('docker-dev-deploy') {
-        steps{
-            script{
-              imageValidation().call()
-              dockerdeploy('dev','5761').call   
-            }
-        }
-    }
-
 }
 
 def buildApp(){
