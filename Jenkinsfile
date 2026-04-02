@@ -4,7 +4,7 @@ pipeline {
     }
 
     tools {
-        maven 'Maven-3.9.11'
+        maven 'Maven-3.9.14'
         jdk 'JDK-17'
     }
 
@@ -20,10 +20,10 @@ pipeline {
 
     environment {
         APPLICATION_NAME = "eureka"
-        SONAR_HOST = 'http://34.172.162.27:9000'
+        SONAR_HOST = 'http://34.57.207.225:9000'
         DOCKER_HUB = "docker.io/sureshindrala"
-        DOCKER_CREDS = credentials('dockerhub_sureshindrala_creds')
-        DOCKER_SERVER = "136.114.27.219"
+        DOCKER_CREDS = credentials('docker_creds')
+        DOCKER_SERVER = "35.224.229.170"
     }
 
     stages {
