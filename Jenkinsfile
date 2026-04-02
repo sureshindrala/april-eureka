@@ -26,7 +26,7 @@ stages {
     stage('***********************sonar-stage*******************'){
         steps {
         echo "*******${env.APPLICATION_NAME}-sonar scaning*************"
-         withCredentials([string(credentialsId: 'sonar_creds', variable: 'sonar_creds')])
+         withCredentials([string(credentialsId: 'sonar_creds', variable: 'sonar_creds')]){
             sh """
                 mvn clean verify sonar:sonar \
                 -Dsonar.projectKey=chathura-eureka \
@@ -34,6 +34,8 @@ stages {
                 -Dsonar.login=$sonar_creds        
 
             """
+         }
+
         }
 
     }
