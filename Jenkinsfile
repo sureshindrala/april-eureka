@@ -150,7 +150,59 @@ pipeline {
             cleanWs()
         }
     }
+
 }
+
+def dockerBuildandPush() {
+    return {
+        sh """
+            cp ${WORKSPACE}/target/chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd
+
+            docker build --no-cache --pull \
+            --build-arg JAR_SOURCE=chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} \
+            -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd
+
+            echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin
+
+            docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}
+        """
+    }
+}
+def imageValidation() {
+    return {
+        sh """
+        docker pull ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} || (
+            echo "Image not found, building..."
+            mvn clean package -DskipTests=true
+            dockerBuildandPush
+        )
+        """
+    }
+}
+def dockerdeploy(envDeploy, envPort) {
+    return {
+        withCredentials([usernamePassword(
+            credentialsId: 'greesh_creds',
+            passwordVariable: 'PASSWORD',
+            usernameVariable: 'USERNAME'
+        )]) {
+
+            sh """
+            sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no $USERNAME@${env.DOCKER_SERVER} "
+                docker stop ${env.APPLICATION_NAME}-${envDeploy} || true
+                docker rm ${env.APPLICATION_NAME}-${envDeploy} || true
+
+                docker run -d -p ${envPort}:8761 \
+                --name ${env.APPLICATION_NAME}-${envDeploy} \
+                ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}
+
+                docker ps
+            "
+            """
+        }
+    }
+}
+
 
 
 // pipeline {
