@@ -14,5 +14,3 @@ RUN chmod 777 /opt/chathura/
 EXPOSE 8761
 # command for run java
 CMD ["java" , "-jar" , "/opt/chathura/i27-eureka-0.0.1-SNAPSHOT.jar"]
-
-chathura-eureka-0.0.1-SNAPSHOT.jar
