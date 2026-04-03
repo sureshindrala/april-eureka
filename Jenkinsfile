@@ -103,7 +103,7 @@ pipeline {
             )]) {
                 script {
                     sh """
-                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker container run -dit -p ${envPort}:8761 --name ${env.APPLICATION_NAME}-${envDeploy} ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"
+                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker container run -dit -p 8761:8761 --name ${env.APPLICATION_NAME} ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"
                     """
                 }
             }
