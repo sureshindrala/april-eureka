@@ -65,35 +65,35 @@ pipeline {
             }
 
         }
-        // stage('Build Format') {
-        //     steps {
-        //             echo "***************************Printing Build Format*****************************"
-        //             script {
-        //                 sh """
-        //                 echo "Testing JAR SOURCE: chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
-        //                 echo "Testing JAR Destination Format: chathura-${env.APPLICATION_NAME}-${currentBuild.number}-${BRANCH_NAME}.${env.POM_PACKAGING}"
+        stage('Build Format') {
+            steps {
+                    echo "***************************Printing Build Format*****************************"
+                    script {
+                        sh """
+                        echo "Testing JAR SOURCE: chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
+                        echo "Testing JAR Destination Format: chathura-${env.APPLICATION_NAME}-${currentBuild.number}-${BRANCH_NAME}.${env.POM_PACKAGING}"
                     
-        //                 """
-        //                 sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
-        //                 sh "ls -la ./.cicd"
-        //                 sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
+                        """
+                        sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
+                        sh "ls -la ./.cicd"
+                        sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
                         
-        //                 echo "****************** Login to Docker Registry ******************"
+                        echo "****************** Login to Docker Registry ******************"
 
-        //                 sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
-        //                 echo "****************** Push Image to Docker Registry ******************"
-        //                 sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"                
+                        sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
+                        echo "****************** Push Image to Docker Registry ******************"
+                        sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"                
                     
-        //             }
-        //         }
-        //     }
-            stage ('************docker-build and push************************') {
-                steps{
-                    script{
-                        dockerBuildandPush().call()
                     }
                 }
             }
+            // stage ('************docker-build and push************************') {
+            //     steps{
+            //         script{
+            //             dockerBuildandPush().call()
+            //         }
+            //     }
+            // }
             stage ('************deploy to Dev************************') {
                 steps{
                     withCredentials([usernamePassword(credentialsId: 'greesh_creds', 
