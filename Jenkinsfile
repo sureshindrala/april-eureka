@@ -96,8 +96,15 @@ pipeline {
             }
             stage ('************deploy to Dev************************') {
                 steps{
+                    withCredentials([usernamePassword(credentialsId: 'greesh_creds', 
+                        passwordVariable: 'PASSWORD', 
+                        usernameVariable: 'USERNAME')])                    
                     script{
-                        dockerdeploy('dev' ,'5761', '8761').call ()
+            // Run new container
+                        sh """
+                        "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@${env.DOCKER_SERVER} "docker images""
+                   
+                        """
                     }
                 }
             }                        
