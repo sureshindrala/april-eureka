@@ -94,20 +94,21 @@ pipeline {
             //         }
             //     }
             // }
-            stage ('************deploy to Dev************************') {
-                steps{
-                    withCredentials([usernamePassword(credentialsId: 'greesh_creds', 
-                        passwordVariable: 'PASSWORD', 
-                        usernameVariable: 'USERNAME')])                    
-                    script{
-            // Run new container
-                        sh """
-                        "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no '$USERNAME'@${env.DOCKER_SERVER} "docker images""
-                   
-                        """
-                    }
+    stage('Deploy to Dev') {
+        steps {
+            withCredentials([usernamePassword(
+                credentialsId: 'greesh_creds',
+                usernameVariable: 'USERNAME',
+                passwordVariable: 'PASSWORD'
+            )]) {
+                script {
+                    sh """
+                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker images"
+                    """
                 }
-            }                        
+            }
+        }
+    }                        
         
     }
 }
