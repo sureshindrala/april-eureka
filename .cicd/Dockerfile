@@ -1,5 +1,5 @@
 # This is offical image
-FROM openjdk:18
+FROM openjdk:17
 # Creat a folder for jar file
 RUN mkdir -p /opt/chathura/
 # Make work dir 
