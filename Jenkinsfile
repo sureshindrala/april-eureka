@@ -69,22 +69,25 @@ pipeline {
             steps {
                     echo "***************************Printing Build Format*****************************"
                     script {
-                        sh """
-                        echo "Testing JAR SOURCE: i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
-                        echo "Testing JAR Destination Format: i27-${env.APPLICATION_NAME}-${currentBuild.number}-${BRANCH_NAME}.${env.POM_PACKAGING}"
-                    
-                        """
-                        sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
-                        sh "ls -la ./.cicd"
-                        sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
-                        
-                        echo "****************** Login to Docker Registry ******************"
-
-                        sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
-                        echo "****************** Push Image to Docker Registry ******************"
-                        sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"                
-                    
+                        dockerBuildandPush().call()
                     }
+                    // script {
+                    //     sh """
+                    //     echo "Testing JAR SOURCE: i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
+                    //     echo "Testing JAR Destination Format: i27-${env.APPLICATION_NAME}-${currentBuild.number}-${BRANCH_NAME}.${env.POM_PACKAGING}"
+                    
+                    //     """
+                    //     sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
+                    //     sh "ls -la ./.cicd"
+                    //     sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
+                        
+                    //     echo "****************** Login to Docker Registry ******************"
+
+                    //     sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
+                    //     echo "****************** Push Image to Docker Registry ******************"
+                    //     sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"                
+                    
+                    // }
                 }
             }
             // stage ('************docker-build and push************************') {
@@ -94,37 +97,62 @@ pipeline {
             //         }
             //     }
             // }
-    stage('Deploy to Dev') {
-        steps {
-            withCredentials([usernamePassword(
-                credentialsId: 'greesh_creds',
-                usernameVariable: 'USERNAME',
-                passwordVariable: 'PASSWORD'
-            )]) {
-                script {
-                    try {
-                        // Stop existing container
-                        sh """
-                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker stop ${env.APPLICATION_NAME} || true"
-                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker rm ${env.APPLICATION_NAME} || true"
-                        """
+        stage('Deploy to Dev') {
+            steps {
+                // withCredentials([usernamePassword(
+                //     credentialsId: 'greesh_creds',
+                //     usernameVariable: 'USERNAME',
+                //     passwordVariable: 'PASSWORD'
+                // )]) {
+                    script {
+                        dockerdeploy('dev', '5761').call()
+                        
+                        // try {
+                        //     // Stop existing container
+                        //     sh """
+                        //     sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker stop ${env.APPLICATION_NAME} || true"
+                        //     sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker rm ${env.APPLICATION_NAME} || true"
+                        //     """
 
-                        // Run new container
-                        sh """
-                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker container run -dit -p 8761:8761 --name ${env.APPLICATION_NAME} ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"
-                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker ps"
-                        """
-                    } catch (err) {
-                        echo "Error caught: ${err}"
+                        //     // Run new container
+                        //     sh """
+                        //     sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker container run -dit -p 8761:8761 --name ${env.APPLICATION_NAME} ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"
+                        //     sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker ps"
+                        //     """
+                        // } catch (err) {
+                        //     echo "Error caught: ${err}"
+                        // }
+                        // // sh """
+                        // //     sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker container run -dit -p 8761:8761 --name ${env.APPLICATION_NAME} ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"
+                        // // """
                     }
-
+                }
+            }
+        stage('Deploy to Test'){
+            steps {
+                script{
+                    dockerdeploy('tst', '6761').call()
+                    }
+                }
+            }
+        stage('Deploy to stage'){
+            steps {
+                script{
+                    dockerdeploy('stage', '7761').call()
                 }
             }
         }
+        stage('Deploy to prod'){
+            steps {
+                script{
+                    dockerdeploy('prod', '8761').call()
+                }
+            }
+        }                
     }                        
         
-    }
 }
+
 
 def buildApp(){
     return {
@@ -153,18 +181,23 @@ def imageValidation() {
 
 def dockerBuildandPush() {
     return {
-        echo "*****************building Docker image***********************"
+        script {
+            sh """
+            echo "Testing JAR SOURCE: i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING}"
+            echo "Testing JAR Destination Format: i27-${env.APPLICATION_NAME}-${currentBuild.number}-${BRANCH_NAME}.${env.POM_PACKAGING}"
         
-            sh "cp ${workspace}/target/chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
+            """
+            sh "cp ${workspace}/target/i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} ./.cicd"
             sh "ls -la ./.cicd"
-            sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=chathura-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
+            sh "docker build --force-rm --no-cache --pull --rm=true --build-arg JAR_SOURCE=i27-${env.APPLICATION_NAME}-${env.POM_VERSION}.${env.POM_PACKAGING} -t ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT} ./.cicd "
             
             echo "****************** Login to Docker Registry ******************"
 
-
             sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
             echo "****************** Push Image to Docker Registry ******************"
-            sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"    
+            sh "docker push ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"                
+        
+        }   
 
                
     }
