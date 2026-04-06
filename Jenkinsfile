@@ -40,6 +40,14 @@ pipeline {
     }
     stages {
         stage('************build-stage************************') {
+            when {
+                anyOf {
+                    expression {
+                        params.dockerPush == 'yes'
+                        params.buildOnly == 'yes'
+                    }
+                }
+            }            
             steps {
 
                 echo "*****Building-${env.APPLICATION_NAME}******************"           
@@ -50,6 +58,13 @@ pipeline {
 
             }
         stage('***********************sonar-stage*******************'){
+            when {
+                expression {
+                    params.dockerPush == 'yes'
+                    params.buildOnly == 'yes'                    
+                    params.scanOnly == 'yes'
+                }
+            }
             steps {
             echo "*******${env.APPLICATION_NAME}-sonar scaning*************"
             withCredentials([string(credentialsId: 'sonar_creds', variable: 'sonar_creds')]){
@@ -66,6 +81,13 @@ pipeline {
 
         }
         stage('Build Format') {
+            when {
+                expression {
+                    params.dockerPush == 'yes'
+                    // params.buildOnly == 'yes'                    
+                    // params.scanOnly == 'yes'
+                }
+            }
             steps {
                     echo "***************************Printing Build Format*****************************"
                     script {
@@ -98,6 +120,11 @@ pipeline {
             //     }
             // }
         stage('Deploy to Dev') {
+            when {
+                expression {
+                    params.deployToDev == 'yes'
+                }
+            }
             steps {
                 // withCredentials([usernamePassword(
                 //     credentialsId: 'greesh_creds',
@@ -129,6 +156,11 @@ pipeline {
                 }
             }
         stage('Deploy to Test'){
+            when {
+                expression {
+                    params.deployToTest == 'yes'
+                }
+            }
             steps {
                 script{
                     dockerdeploy('tst', '6761').call()
@@ -136,6 +168,11 @@ pipeline {
                 }
             }
         stage('Deploy to stage'){
+            when {
+                expression {
+                    params.deployToStage == 'yes'
+                }
+            }
             steps {
                 script{
                     dockerdeploy('stage', '7761').call()
@@ -143,6 +180,11 @@ pipeline {
             }
         }
         stage('Deploy to prod'){
+            when {
+                expression {
+                    params.deployToProd == 'yes'
+                }
+            }
             steps {
                 script{
                     dockerdeploy('prod', '8761').call()
