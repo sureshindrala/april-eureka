@@ -102,9 +102,22 @@ pipeline {
                 passwordVariable: 'PASSWORD'
             )]) {
                 script {
-                    sh """
+                    try {
+                        // Stop existing container
+                        sh """
+                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker stop ${env.APPLICATION_NAME} || true"
+                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker rm ${env.APPLICATION_NAME} || true"
+                        """
+
+                        // Run new container
+                        sh """
                         sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker container run -dit -p 8761:8761 --name ${env.APPLICATION_NAME} ${env.DOCKER_HUB}/${env.APPLICATION_NAME}:${GIT_COMMIT}"
-                    """
+                        sshpass -p '${PASSWORD}' ssh -o StrictHostKeyChecking=no ${USERNAME}@${env.DOCKER_SERVER} "docker ps"
+                        """
+                    } catch (err) {
+                        echo "Error caught: ${err}"
+                    }
+
                 }
             }
         }
