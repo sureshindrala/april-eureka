@@ -190,6 +190,7 @@ pipeline {
             }
             steps {
                 script{
+                    imageValidation().call()
                     dockerdeploy('prod', '8761').call()
                 }
             }
