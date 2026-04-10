@@ -132,6 +132,7 @@ pipeline {
                 //     passwordVariable: 'PASSWORD'
                 // )]) {
                     script {
+                        imageValidation().call()
                         dockerdeploy('dev', '5761').call()
                         
                         // try {
@@ -163,6 +164,7 @@ pipeline {
             }
             steps {
                 script{
+                    imageValidation().call()
                     dockerdeploy('tst', '6761').call()
                     }
                 }
@@ -175,6 +177,7 @@ pipeline {
             }
             steps {
                 script{
+                     imageValidation().call()
                     dockerdeploy('stage', '7761').call()
                 }
             }
