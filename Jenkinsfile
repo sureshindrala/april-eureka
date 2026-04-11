@@ -212,6 +212,9 @@ pipeline {
                 timeout(time: 300, unit: 'SECONDS'){ // SECONDS, MINUTES, HOURs
                      input message: "Deploying to ${env.APPLICATION_NAME} to production ??", ok:'yes', submitter: 'Suresh Indrala'
                 }
+                script {
+                    dockerDeploy('prod', '8761').call()
+                }                
             }
         }                
     }                        
