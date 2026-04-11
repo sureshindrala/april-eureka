@@ -171,27 +171,46 @@ pipeline {
             }
         stage('Deploy to stage'){
             when {
-                expression {
-                    params.deployToStage == 'yes'
+                allOf {
+                anyOf {
+                    expression {
+                        params.deployToStage == 'yes'
+                    }
+                }
+                anyOf {
+                    branch 'release/*'
+                    tag pattern: "v\\d{1,2}\\.\\d{1,2}\\.\\d{1,2}", comparator: "REGEXP" // v1.2.3 is the correct one, v123 is the wrong one
                 }
             }
+            }
             steps {
-                script{
-                     imageValidation().call()
-                    dockerdeploy('stage', '7761').call()
+                script {   
+                    imageValidation().call()
+                    dockerDeploy('stg', '7761', '8761').call()
                 }
             }
         }
         stage('Deploy to prod'){
+            // when {
+            //     expression {
+            //         params.deployToProd == 'yes'
+            //     }
+            // }
             when {
-                expression {
-                    params.deployToProd == 'yes'
+                allOf {
+                    anyOf {
+                        expression {
+                            params.deployToProd == 'yes'
+                        }
+                    }
+                    anyOf {
+                        tag pattern: "v\\d{1,2}\\.\\d{1,2}\\.\\d{1,2}", comparator: "REGEXP" // v1.2.3 is the correct one, v123 is the wrong one
+                    }
                 }
             }
             steps {
-                script{
-                    imageValidation().call()
-                    dockerdeploy('prod', '8761').call()
+                timeout(time: 300, unit: 'SECONDS'){ // SECONDS, MINUTES, HOURs
+                     input message: "Deploying to ${env.APPLICATION_NAME} to production ??", ok:'yes', submitter: 'sivasre,i27academy'
                 }
             }
         }                
