@@ -186,7 +186,7 @@ pipeline {
             steps {
                 script {   
                     imageValidation().call()
-                    dockerDeploy('stg', '7761', '8761').call()
+                    dockerDeploy('stg', '7761').call()
                 }
             }
         }
@@ -210,7 +210,7 @@ pipeline {
             }
             steps {
                 timeout(time: 300, unit: 'SECONDS'){ // SECONDS, MINUTES, HOURs
-                     input message: "Deploying to ${env.APPLICATION_NAME} to production ??", ok:'yes', submitter: 'sivasre,i27academy'
+                     input message: "Deploying to ${env.APPLICATION_NAME} to production ??", ok:'yes', submitter: 'greesh'
                 }
             }
         }                
