@@ -213,7 +213,7 @@ pipeline {
                      input message: "Deploying to ${env.APPLICATION_NAME} to production ??", ok:'yes', submitter: 'Suresh Indrala'
                 }
                 script {
-                    dockerDeploy('prod', '8761').call()
+                    dockerdeploy('prod', '8761').call()
                 }                
             }
         }                
