@@ -186,7 +186,7 @@ pipeline {
             steps {
                 script {   
                     imageValidation().call()
-                    dockerDeploy('stage', '7761').call()
+                    dockerdeploy('stage', '7761').call()
                 }
             }
         }
